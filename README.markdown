@@ -27,3 +27,7 @@ Todo
 ====
 * Display some additional user stats.
 * Toggle visibility of forked repositories.
+
+License
+=======
+MIT License except for the selso jquery plugin dependency which is MIT and GPL licensed.
