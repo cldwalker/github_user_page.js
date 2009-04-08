@@ -1,5 +1,6 @@
 (function($) {
   var plugin_domain;
+  var forked_repository_ids;
 
   // These options are mainly useful while developing on the bookmarklet.
   //Options:
@@ -13,9 +14,12 @@
     $.getJSON("http://github.com/api/v1/json/"+options.user +"?callback=?", function(json) {
       loadRepoStats(json);
       // Adding ids to the repo boxes because they are required by the sort plugin and repos don't have them.
+      // Also needed for toggling forked repos.
       $('li.project').each(function(i,e){ $(e).attr('id','repo-'+ i) });
       sourceSortPlugin();
       createSortBox();
+      setupForkedToggle();
+      addRepoStats(json.user.repositories);
     });
   };
 
@@ -31,6 +35,15 @@
     else if (field == 'forks') {
       $('li.project').selso({orderBy:'span.forks_num', type:'num', direction:sort_direction});
       $("a.forks_sort").toggle();
+    }
+    else if (field == 'date') {
+      $('li.project').selso({type: 'num', direction: sort_direction,
+        extract: function(obj) {
+          var date_time = $(obj).find('div.meta abbr').attr('title').match(/(\d\d\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)/);
+          return Date.UTC(date_time[1], date_time[2], date_time[3], date_time[4], date_time[5], date_time[6]);
+        }
+      });
+      $("a.date_sort").toggle();
     }
   };
 
@@ -50,7 +63,7 @@
   };
 
   function loadRepoStats(json) {
-    $('div.title').each(function() {
+    $('div.title', 'li.project').each(function() {
       var repo_div = $(this);
       var repo_obj = detect(json.user.repositories, function(e) {
         return e.name == repo_div.text();
@@ -97,7 +110,7 @@
       }\
     </style>\
     <div id='sort_links'>\
-      <span id='sort_links_label'>Sort Repositories:</span>\
+      <span id='sort_links_label'>SORT:</span>\
       <span class='sort_label'>NAME</span>\
       <a class='name_sort asc_sort' style='display:none' href=\"javascript:$.githubRepoSort('name', 'asc')\"></a>\
       <a class='name_sort desc_sort' href=\"javascript:$.githubRepoSort('name', 'desc')\"></a>\
@@ -107,7 +120,47 @@
       | <span class='sort_label'>FORKS</span>\
       <a class='forks_sort asc_sort' style='display:none' href=\"javascript:$.githubRepoSort('forks', 'asc')\"></a>\
       <a class='forks_sort desc_sort' href=\"javascript:$.githubRepoSort('forks', 'desc')\"></a>\
+      | <span class='sort_label'>UPDATED</span>\
+      <a class='date_sort asc_sort' style='display:none' href=\"javascript:$.githubRepoSort('date', 'asc')\"></a>\
+      <a class='date_sort desc_sort' href=\"javascript:$.githubRepoSort('date', 'desc')\"></a><br/>\
+      <a id='toggle_forked_repositories'>Toggle Forked Repositories</a><br/>\
     </div>\
-      ");
+    ");
+  };
+
+  function setupForkedToggle() {
+    forked_repository_ids = $.grep($('li.project'), function(e) {return $(e).find('div.meta').text().match('Forked from')}).map(
+      function(f) { return '#'+$(f).attr('id') });
+    $("#toggle_forked_repositories").click( function(){
+      $(forked_repository_ids.join(',')).toggle();
+      void(0);
+    });
+    $("#toggle_forked_repositories").html("Toggle "+$(forked_repository_ids).size()+ " Forked Repositories");
+  };
+
+  function sum(array) {
+    var total = 0;
+    $.each(array, function() { total += this});
+    return total;
+  };
+
+  function average(array) { return (sum(array) / $(array).size()).toFixed(1);}
+
+  function addRepoStats(repositories) {
+    var nonforked_repos = $.grep(repositories, function(e) { return !e.fork });
+    var forked_repos = $.grep(repositories, function(e) { return e.fork });
+    addStat("Non-Fork/Fork:", $(nonforked_repos).size()+" / "+$(forked_repos).size() );
+
+    var nonforked_watcher_average = average(nonforked_repos.map(function(e) {return e.watchers}));
+    var forked_watcher_average = average(forked_repos.map(function(e) {return e.watchers}));
+    addStat("Watcher Average:", nonforked_watcher_average+" / "+ forked_watcher_average );
+
+    var nonforked_fork_average = average(nonforked_repos.map(function(e) {return e.forks}));
+    var forked_fork_average = average(forked_repos.map(function(e) {return e.forks}));
+    addStat("Fork Average:", nonforked_fork_average+" / "+forked_fork_average );
+  };
+
+  function addStat(label, data) {
+    $('div.info').append("<div class='field'><label>"+label+"</label><div> "+data+" </div></div>");
   };
 })(jQuery);

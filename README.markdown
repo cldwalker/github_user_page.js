@@ -23,11 +23,6 @@ on localhost:4000 and wanted to host the images and javascript dependencies the 
 
     javascript:(function(){$.getScript("http://localhost:4000/javascripts/jquery.githubUserPage.js",function(){$.githubUserPage({domain: 'localhost:4000'})})})()
 
-Todo
-====
-* Display some additional user stats.
-* Toggle visibility of forked repositories.
-
 License
 =======
 MIT License except for the selso jquery plugin dependency which is MIT and GPL licensed.
