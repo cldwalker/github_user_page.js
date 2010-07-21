@@ -1,8 +1,8 @@
 Description
 ===========
 
-This github bookmarklet(jQuery plugin) enhances user pages by adding repository sorting and providing additional
-repo stats.
+This github bookmarklet(jQuery plugin) enhances user pages by adding repository sorting, providing additional
+repo stats and toggling of forked repositories.
 
 
 Install
@@ -18,7 +18,7 @@ bookmarklet and $.githubRepoSort() to sort repositories. The default bookmarklet
 
     javascript:(function(){$.getScript("http://tagaholic.me/javascripts/jquery.githubUserPage.js",function(){$.githubUserPage()})})()
 
-githubuserPage() has some options that are handy for development. For example if you were developing
+githubUserPage() has some options that are handy for development. For example if you were developing
 on localhost:4000 and wanted to host the images and javascript dependencies the bookmarklet would be:
 
     javascript:(function(){$.getScript("http://localhost:4000/javascripts/jquery.githubUserPage.js",function(){$.githubUserPage({domain: 'localhost:4000'})})})()
